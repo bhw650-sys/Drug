@@ -11,13 +11,12 @@
 - 약학정보원에 다녀와도 조건이 30분 동안 남아 있음
 - 설치 없이 링크로 열고, 홈 화면에 추가하면 앱처럼 사용
 
-## 현재 상태
+## 동작 방식
 
-- 입력 화면: 완성
-- 약학정보원으로 조건 자동 전달: **연결 확인 중**. 지금은 검색 버튼을 누르면 각인 글자를 복사한 뒤 약학정보원 낱알식별 화면을 엽니다.
-  약학정보원 검색 화면의 입력 이름을 확인하면 `docs/index.html`의 `KPIC.handoff` 설정만 채우면 됩니다.
+"약학정보원에서 검색"을 누르면 고른 조건이 담긴 약학정보원 낱알식별 검색 결과가 새 탭으로 열립니다.
+약학정보원 검색 폼과 같은 이름·값을 주소에 담아 보냅니다 (`docs/index.html`의 `kpicUrl`).
 
-## 휴대폰에서 쓰기 (GitHub Pages, 무료)
+## 동료와 같이 쓰기 (GitHub Pages, 무료, 선택)
 
 1. 저장소 **Settings → Pages**
 2. Source: **Deploy from a branch**, Branch: `claude/medicine-search-mobile-app-9zp97x`, 폴더: `/docs` → **Save**

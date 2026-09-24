@@ -25,8 +25,6 @@
     --accent: #0B6E5F;
     --accent-ink: #FFFFFF;
     --accent-soft: #D8EDE7;
-    --note: #FFF3D6;
-    --note-line: #E3B04B;
     --pill-stroke: rgba(18, 32, 28, 0.32);
     --shadow: 0 -6px 24px rgba(18, 32, 28, 0.10);
     --font: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
@@ -45,8 +43,6 @@
       --accent: #45C4A7;
       --accent-ink: #04221C;
       --accent-soft: #15372F;
-      --note: #33280F;
-      --note-line: #B98A2A;
       --pill-stroke: rgba(255, 255, 255, 0.3);
       --shadow: 0 -6px 24px rgba(0, 0, 0, 0.45);
     }
@@ -63,8 +59,6 @@
     --accent: #45C4A7;
     --accent-ink: #04221C;
     --accent-soft: #15372F;
-    --note: #33280F;
-    --note-line: #B98A2A;
     --pill-stroke: rgba(255, 255, 255, 0.3);
     --shadow: 0 -6px 24px rgba(0, 0, 0, 0.45);
   }
@@ -104,15 +98,6 @@
   /* ---------- 본문 ---------- */
   .main { padding-top: 8px; padding-bottom: calc(var(--bar-h, 150px) + 24px); }
   .main .wrap { display: flex; flex-direction: column; gap: 22px; }
-  .notice {
-    margin: 0;
-    background: var(--note);
-    border: 1px solid var(--note-line);
-    border-radius: 14px;
-    padding: 10px 12px;
-    font-size: 14px;
-    color: var(--ink);
-  }
   .group { display: flex; flex-direction: column; gap: 10px; }
   .group-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
   .group-head h2 { margin: 0; font-size: 17px; font-weight: 700; }
@@ -249,8 +234,8 @@
     gap: 8px;
     cursor: pointer;
   }
-  .btn-primary { flex: 1; background: var(--accent); color: var(--accent-ink); }
-  .btn-primary:disabled { background: var(--surface-2); color: var(--ink-3); cursor: default; }
+  .btn-primary { flex: 1; background: var(--accent); color: var(--accent-ink); text-decoration: none; }
+  .btn-primary[aria-disabled="true"] { background: var(--surface-2); color: var(--ink-3); cursor: default; pointer-events: none; }
   .btn-ghost { background: var(--surface); border-color: var(--line); }
   .btn-ghost:disabled { color: var(--ink-3); cursor: default; }
 
@@ -276,18 +261,6 @@
   .key-fn { font-family: var(--font); font-size: 15px; background: var(--surface-2); }
   .key-done { font-family: var(--font); font-size: 16px; background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 
-  .toast {
-    position: absolute;
-    left: 16px;
-    right: 16px;
-    bottom: calc(100% + 20px);
-    margin: 0;
-    background: var(--ink);
-    color: var(--app);
-    border-radius: 12px;
-    padding: 11px 14px;
-    font-size: 14.5px;
-  }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -301,14 +274,12 @@
       <span class="wordmark">알약찾기</span>
       <span class="sub">약학정보원 낱알식별 검색 도우미</span>
     </div>
-    <a class="link" id="kpicLink" href="https://www.health.kr/searchIdentity/search.asp" rel="noopener">약학정보원 ›</a>
+    <a class="link" href="https://health.kr/searchIdentity/search.asp" rel="noopener">약학정보원 ›</a>
   </div>
 </header>
 
 <main class="main">
   <div class="wrap">
-    <p class="notice" id="notice" hidden>약학정보원으로 조건을 자동으로 넘기는 기능은 연결 작업 중입니다. 지금은 검색 버튼을 누르면 각인 글자를 복사한 뒤 약학정보원 낱알식별 화면을 엽니다.</p>
-
     <section class="group" aria-labelledby="h-imprint">
       <div class="group-head"><h2 id="h-imprint">각인 글자</h2><span class="hint">보이는 글자만, 모르면 비워 두세요</span></div>
       <div class="imprint">
@@ -352,12 +323,11 @@
 
 <footer class="bar" id="bar">
   <div class="wrap">
-    <p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
     <div class="keypad" id="keypad" hidden></div>
     <p class="summary" id="summary"></p>
     <div class="bar-row">
       <button type="button" class="btn btn-ghost" id="clearBtn">지우기</button>
-      <button type="button" class="btn btn-primary" id="searchBtn">약학정보원에서 검색</button>
+      <a class="btn btn-primary" id="searchBtn" target="_blank" rel="noopener" aria-disabled="true">약학정보원에서 검색</a>
     </div>
   </div>
 </footer>
@@ -366,17 +336,14 @@
 (function () {
   'use strict';
 
-  // 약학정보원 낱알식별 검색으로 조건을 넘기는 설정.
-  // handoff가 비어 있으면 검색 화면만 연다. health.kr 검색 화면의 입력 이름과 값을
-  // 확인한 뒤 아래 형식으로 채운다.
-  //   method: 'GET' | 'POST', action: 결과를 받는 주소, charset: 'UTF-8' | 'EUC-KR'
-  //   names: 앱 조건(front, back, shape, color, form, line) → health.kr 입력 이름
-  //   values: 조건별 선택지 → health.kr 값 (적지 않은 값은 그대로 보냄)
-  //   extra: 항상 함께 보낼 [이름, 값] 목록
-  var KPIC = {
-    page: 'https://www.health.kr/searchIdentity/search.asp',
-    handoff: null
-  };
+  // 약학정보원 낱알식별 검색(health.kr)은 검색 조건을 주소(GET)로도 받는다.
+  // 약학정보원 검색 폼과 같은 이름·값을 쓰고, 모양·분할선의 아래 값만 다르다.
+  var KPIC_URL = 'https://health.kr/searchIdentity/search.asp';
+  var KPIC_SHAPE = { '원형': '완전원형' };
+  var KPIC_SHAPE_ETC = ['8자형', '강낭콩형', '과일모양', '구형', '나비넥타이형', '나비모양', '다이아몬드형', '도넛형',
+    '동물모양', '땅콩형', '레몬형', '물방울형', '방패형', '사과형', '심장형', '십각형', '에벌레형', '얼굴모양',
+    '오목한 삼각형', '클로버형', '탄환형'];
+  var KPIC_LINE = { '없음': 'no', '(-)형': 'minus', '(+)형': 'plus' };
 
   var SHAPES = ['원형', '타원형', '장방형', '반원형', '삼각형', '사각형', '마름모형', '오각형', '육각형', '팔각형', '기타'];
   var COLORS = {
@@ -511,7 +478,14 @@
     var sum = $('#summary');
     sum.textContent = hasAny() ? summaryText(q) : '아는 조건만 골라 주세요';
     sum.classList.toggle('empty', !hasAny());
-    $('#searchBtn').disabled = !hasAny();
+    var link = $('#searchBtn');
+    if (hasAny()) {
+      link.href = kpicUrl(q);
+      link.removeAttribute('aria-disabled');
+    } else {
+      link.removeAttribute('href');
+      link.setAttribute('aria-disabled', 'true');
+    }
     $('#clearBtn').disabled = !hasAny();
     save();
     syncBarHeight();
@@ -520,14 +494,6 @@
     document.documentElement.style.setProperty('--bar-h', $('#bar').offsetHeight + 'px');
   }
 
-  var toastTimer = 0;
-  function toast(msg) {
-    var t = $('#toast');
-    t.textContent = msg;
-    t.hidden = false;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { t.hidden = true; }, 2600);
-  }
 
   // ---------- 각인 키패드 ----------
   function openKeypad(slot) {
@@ -551,54 +517,19 @@
   }
 
   // ---------- 약학정보원으로 넘기기 ----------
-  function kpicParams(q, h) {
-    var out = [];
-    Object.keys(h.names || {}).forEach(function (k) {
-      if (!q[k]) return;
-      var val = q[k];
-      var map = h.values && h.values[k];
-      if (map && Object.prototype.hasOwnProperty.call(map, val)) val = map[val];
-      out.push([h.names[k], val]);
-    });
-    (h.extra || []).forEach(function (pair) { out.push(pair); });
-    return out;
-  }
-  function submitToKpic(q, h) {
-    var form = document.createElement('form');
-    form.method = h.method === 'POST' ? 'post' : 'get';
-    form.action = h.action;
-    form.acceptCharset = h.charset || 'UTF-8';
-    form.hidden = true;
-    kpicParams(q, h).forEach(function (pair) {
-      var input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = pair[0];
-      input.value = pair[1];
-      form.appendChild(input);
-    });
-    document.body.appendChild(form);
-    form.submit();
-  }
-  function search() {
-    if (!hasAny()) return;
-    closeKeypad();
-    var q = query();
-    if (window.ALYAK_PREVIEW) {
-      toast('미리보기에서는 약학정보원으로 넘어가지 않아요.');
-      return;
-    }
-    if (KPIC.handoff) {
-      submitToKpic(q, KPIC.handoff);
-      return;
-    }
-    // 연결 전: 각인 글자를 복사해 두고 약학정보원 검색 화면을 연다
-    var text = [q.front, q.back].filter(Boolean).join(' ');
-    var go = function () { location.href = KPIC.page; };
-    if (text && navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(go, go);
-    } else {
-      go();
-    }
+  // 약학정보원 검색 버튼(idfySend)이 보내는 값과 같다. 앞/뒤 칸은 약학정보원이 양면 모두에서 찾는다.
+  function kpicUrl(q) {
+    var f = [['search_detail', 'Y'], ['TabState', '0'], ['proYN', ''], ['pageNo', '1'], ['rowLength', '50']];
+    if (q.front) f.push(['drug_print_front', q.front]);
+    if (q.back) f.push(['drug_print_back', q.back]);
+    if (q.shape === '기타') KPIC_SHAPE_ETC.forEach(function (s) { f.push(['shapes_etc', s]); });
+    else if (q.shape) f.push(['shapes', KPIC_SHAPE[q.shape] || q.shape]);
+    if (q.color) f.push(['colors', q.color]);
+    if (q.form) f.push(['forms', q.form]);
+    if (q.line) f.push(['lines', KPIC_LINE[q.line]]);
+    return KPIC_URL + '?' + f.map(function (p) {
+      return encodeURIComponent(p[0]) + '=' + encodeURIComponent(p[1]);
+    }).join('&');
   }
 
   // ---------- 이벤트 ----------
@@ -625,7 +556,7 @@
     FIELDS.forEach(function (k) { state[k] = ''; });
     closeKeypad();
   });
-  $('#searchBtn').addEventListener('click', search);
+  $('#searchBtn').addEventListener('click', function () { if (state.slot) closeKeypad(); });
   document.addEventListener('keydown', function (e) {
     if (!state.slot || e.metaKey || e.ctrlKey || e.altKey) return;
     if (/^[a-zA-Z0-9-]$/.test(e.key)) { e.preventDefault(); pressKey(e.key.toUpperCase()); }
@@ -636,7 +567,6 @@
   window.addEventListener('resize', syncBarHeight);
   window.addEventListener('pageshow', function () { restore(); render(); });
 
-  $('#notice').hidden = !!KPIC.handoff;
   buildChips();
   buildKeypad();
   restore();
