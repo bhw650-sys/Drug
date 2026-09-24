@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#0B6E5F"/>
+  <defs><clipPath id="capsule"><rect x="106" y="196" width="300" height="120" rx="60"/></clipPath></defs>
+  <g transform="rotate(-40 256 256)">
+    <g clip-path="url(#capsule)">
+      <rect x="106" y="196" width="150" height="120" fill="#FFFFFF"/>
+      <rect x="256" y="196" width="150" height="120" fill="#A8E0D2"/>
+    </g>
+  </g>
+</svg>

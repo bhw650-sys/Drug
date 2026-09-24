@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>알약찾기</title>
+<meta name="description" content="약학정보원 낱알식별 검색 조건을 큰 버튼으로 쉽게 입력하는 도우미">
+<meta name="theme-color" content="#0B6E5F">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="알약찾기">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+  :root {
+    color-scheme: light;
+    --app: #F4F7F6;
+    --surface: #FFFFFF;
+    --surface-2: #EAF0EE;
+    --ink: #12201C;
+    --ink-2: #455852;
+    --ink-3: #697A74;
+    --line: #CFDAD6;
+    --accent: #0B6E5F;
+    --accent-ink: #FFFFFF;
+    --accent-soft: #D8EDE7;
+    --note: #FFF3D6;
+    --note-line: #E3B04B;
+    --pill-stroke: rgba(18, 32, 28, 0.32);
+    --shadow: 0 -6px 24px rgba(18, 32, 28, 0.10);
+    --font: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Roboto Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --app: #0E1513;
+      --surface: #17211E;
+      --surface-2: #1E2A26;
+      --ink: #E2ECE8;
+      --ink-2: #A6B8B1;
+      --ink-3: #84978F;
+      --line: #2C3B36;
+      --accent: #45C4A7;
+      --accent-ink: #04221C;
+      --accent-soft: #15372F;
+      --note: #33280F;
+      --note-line: #B98A2A;
+      --pill-stroke: rgba(255, 255, 255, 0.3);
+      --shadow: 0 -6px 24px rgba(0, 0, 0, 0.45);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --app: #0E1513;
+    --surface: #17211E;
+    --surface-2: #1E2A26;
+    --ink: #E2ECE8;
+    --ink-2: #A6B8B1;
+    --ink-3: #84978F;
+    --line: #2C3B36;
+    --accent: #45C4A7;
+    --accent-ink: #04221C;
+    --accent-soft: #15372F;
+    --note: #33280F;
+    --note-line: #B98A2A;
+    --pill-stroke: rgba(255, 255, 255, 0.3);
+    --shadow: 0 -6px 24px rgba(0, 0, 0, 0.45);
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; }
+  body {
+    background: var(--app);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button, a { font: inherit; color: inherit; touch-action: manipulation; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .wrap { max-width: 560px; margin: 0 auto; padding-inline: 16px; }
+
+  /* ---------- 상단 ---------- */
+  .top { padding-top: calc(env(safe-area-inset-top, 0px) + 14px); padding-bottom: 6px; }
+  .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .brand { display: flex; flex-direction: column; min-width: 0; }
+  .wordmark { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; }
+  .sub { font-size: 13px; color: var(--ink-3); }
+  .link {
+    flex: none;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+    padding: 10px 2px;
+  }
+
+  /* ---------- 본문 ---------- */
+  .main { padding-top: 8px; padding-bottom: calc(var(--bar-h, 150px) + 24px); }
+  .main .wrap { display: flex; flex-direction: column; gap: 22px; }
+  .notice {
+    margin: 0;
+    background: var(--note);
+    border: 1px solid var(--note-line);
+    border-radius: 14px;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .group { display: flex; flex-direction: column; gap: 10px; }
+  .group-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .group-head h2 { margin: 0; font-size: 17px; font-weight: 700; }
+  .hint { font-size: 13px; color: var(--ink-3); }
+
+  .imprint { display: grid; grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); gap: 8px; align-items: stretch; }
+  .slot {
+    appearance: none;
+    min-height: 68px;
+    padding: 8px 12px;
+    border: 2px solid var(--line);
+    border-radius: 16px;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+    text-align: left;
+    cursor: text;
+    min-width: 0;
+  }
+  .slot[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .slot-label { font-size: 12.5px; font-weight: 700; color: var(--ink-3); }
+  .slot-line { display: flex; align-items: center; min-height: 32px; max-width: 100%; }
+  .slot-val {
+    font-family: var(--mono);
+    font-size: 25px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    white-space: pre;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .slot-ph { font-size: 15px; color: var(--ink-3); }
+  .caret { display: none; width: 2px; height: 26px; margin-left: 2px; background: var(--accent); animation: blink 1s steps(1) infinite; }
+  .slot[aria-pressed="true"] .caret { display: inline-block; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .swap {
+    appearance: none;
+    border: 0;
+    border-radius: 12px;
+    background: var(--surface-2);
+    color: var(--ink-2);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .chips { display: grid; gap: 8px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .chips.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .chip {
+    appearance: none;
+    position: relative;
+    min-height: 62px;
+    padding: 8px 4px 7px;
+    border: 2px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .chip:disabled { opacity: 0.4; cursor: default; }
+  .chip .ico { width: 36px; height: 24px; color: var(--ink-2); }
+  .chip-label { line-height: 1.2; white-space: nowrap; }
+  .chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 700; }
+  .chip[aria-pressed="true"] .ico { color: var(--accent); }
+  .chip[aria-pressed="true"]::after {
+    content: "✓";
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 18px;
+    text-align: center;
+  }
+  .sw { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--pill-stroke); }
+  .sw.clear {
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 60%),
+      repeating-conic-gradient(var(--line) 0 25%, var(--surface) 0 50%) 50% / 8px 8px;
+  }
+  .fine { margin: 4px 0 0; font-size: 13px; color: var(--ink-3); }
+
+  /* ---------- 하단 고정 바 ---------- */
+  .bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+    background: var(--app);
+    border-top: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    padding-top: 10px;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  }
+  .bar .wrap { display: flex; flex-direction: column; gap: 10px; position: relative; }
+  .summary {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .summary.empty { color: var(--ink-3); font-weight: 500; }
+  .bar-row { display: flex; gap: 10px; }
+  .btn {
+    appearance: none;
+    border: 2px solid transparent;
+    border-radius: 16px;
+    min-height: 58px;
+    padding: 0 18px;
+    font-size: 17px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+  .btn-primary { flex: 1; background: var(--accent); color: var(--accent-ink); }
+  .btn-primary:disabled { background: var(--surface-2); color: var(--ink-3); cursor: default; }
+  .btn-ghost { background: var(--surface); border-color: var(--line); }
+  .btn-ghost:disabled { color: var(--ink-3); cursor: default; }
+
+  .keypad { display: grid; gap: 6px; }
+  .krow { display: grid; gap: 5px; grid-template-columns: repeat(10, minmax(0, 1fr)); }
+  .krow.r2 { grid-template-columns: 0.5fr repeat(9, minmax(0, 1fr)) 0.5fr; }
+  .krow.r2::before, .krow.r2::after { content: ""; }
+  .krow.r3 { grid-template-columns: repeat(7, minmax(0, 1fr)) minmax(0, 2fr); }
+  .krow.r4 { grid-template-columns: minmax(0, 1fr) minmax(0, 3fr) minmax(0, 3fr); }
+  .key {
+    appearance: none;
+    min-height: 46px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+    font-family: var(--mono);
+    font-size: 19px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .key:active { background: var(--accent-soft); }
+  .key-fn { font-family: var(--font); font-size: 15px; background: var(--surface-2); }
+  .key-done { font-family: var(--font); font-size: 16px; background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+  .toast {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: calc(100% + 20px);
+    margin: 0;
+    background: var(--ink);
+    color: var(--app);
+    border-radius: 12px;
+    padding: 11px 14px;
+    font-size: 14.5px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <span class="wordmark">알약찾기</span>
+      <span class="sub">약학정보원 낱알식별 검색 도우미</span>
+    </div>
+    <a class="link" id="kpicLink" href="https://www.health.kr/searchIdentity/search.asp" rel="noopener">약학정보원 ›</a>
+  </div>
+</header>
+
+<main class="main">
+  <div class="wrap">
+    <p class="notice" id="notice" hidden>약학정보원으로 조건을 자동으로 넘기는 기능은 연결 작업 중입니다. 지금은 검색 버튼을 누르면 각인 글자를 복사한 뒤 약학정보원 낱알식별 화면을 엽니다.</p>
+
+    <section class="group" aria-labelledby="h-imprint">
+      <div class="group-head"><h2 id="h-imprint">각인 글자</h2><span class="hint">보이는 글자만, 모르면 비워 두세요</span></div>
+      <div class="imprint">
+        <button type="button" class="slot" data-slot="front" aria-pressed="false" aria-label="앞면 각인 입력">
+          <span class="slot-label">앞</span>
+          <span class="slot-line"><span class="slot-val" id="val-front"></span><span class="caret" aria-hidden="true"></span><span class="slot-ph" id="ph-front">입력</span></span>
+        </button>
+        <button type="button" class="swap" id="swapBtn" aria-label="앞뒤 글자 바꾸기">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M7 7h11l-3-3M17 17H6l3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button type="button" class="slot" data-slot="back" aria-pressed="false" aria-label="뒷면 각인 입력">
+          <span class="slot-label">뒤</span>
+          <span class="slot-line"><span class="slot-val" id="val-back"></span><span class="caret" aria-hidden="true"></span><span class="slot-ph" id="ph-back">입력</span></span>
+        </button>
+      </div>
+    </section>
+
+    <section class="group" aria-labelledby="h-shape">
+      <div class="group-head"><h2 id="h-shape">모양</h2></div>
+      <div class="chips" id="chips-shape"></div>
+    </section>
+
+    <section class="group" aria-labelledby="h-color">
+      <div class="group-head"><h2 id="h-color">색</h2></div>
+      <div class="chips" id="chips-color"></div>
+    </section>
+
+    <section class="group" aria-labelledby="h-form">
+      <div class="group-head"><h2 id="h-form">제형</h2></div>
+      <div class="chips three" id="chips-form"></div>
+    </section>
+
+    <section class="group" aria-labelledby="h-line">
+      <div class="group-head"><h2 id="h-line">분할선</h2><span class="hint">캡슐은 해당 없음</span></div>
+      <div class="chips three" id="chips-line"></div>
+    </section>
+
+    <p class="fine">검색 결과는 약학정보원(health.kr)이 제공합니다. 이 앱은 검색 조건 입력만 돕습니다. 투약 전 최종 확인은 처방 내역과 함께 하세요.</p>
+  </div>
+</main>
+
+<footer class="bar" id="bar">
+  <div class="wrap">
+    <p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
+    <div class="keypad" id="keypad" hidden></div>
+    <p class="summary" id="summary"></p>
+    <div class="bar-row">
+      <button type="button" class="btn btn-ghost" id="clearBtn">지우기</button>
+      <button type="button" class="btn btn-primary" id="searchBtn">약학정보원에서 검색</button>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  // 약학정보원 낱알식별 검색으로 조건을 넘기는 설정.
+  // handoff가 비어 있으면 검색 화면만 연다. health.kr 검색 화면의 입력 이름과 값을
+  // 확인한 뒤 아래 형식으로 채운다.
+  //   method: 'GET' | 'POST', action: 결과를 받는 주소, charset: 'UTF-8' | 'EUC-KR'
+  //   names: 앱 조건(front, back, shape, color, form, line) → health.kr 입력 이름
+  //   values: 조건별 선택지 → health.kr 값 (적지 않은 값은 그대로 보냄)
+  //   extra: 항상 함께 보낼 [이름, 값] 목록
+  var KPIC = {
+    page: 'https://www.health.kr/searchIdentity/search.asp',
+    handoff: null
+  };
+
+  var SHAPES = ['원형', '타원형', '장방형', '반원형', '삼각형', '사각형', '마름모형', '오각형', '육각형', '팔각형', '기타'];
+  var COLORS = {
+    '하양': '#F6F6F1', '노랑': '#F3D54E', '주황': '#F29A3A', '분홍': '#F2A9C4',
+    '빨강': '#D8453C', '갈색': '#8C5B3E', '연두': '#A9D46C', '초록': '#3F9A5B',
+    '청록': '#2BA39E', '파랑': '#3F7FD8', '남색': '#2E3B7C', '자주': '#9A3E7B',
+    '보라': '#8B6CCB', '회색': '#9DA4A9', '검정': '#2A2B2B', '투명': ''
+  };
+  var FORMS = ['정제', '경질캡슐', '연질캡슐'];
+  var LINES = ['없음', '(-)형', '(+)형'];
+  var FIELDS = ['front', 'back', 'shape', 'color', 'form', 'line'];
+  var STORE_KEY = 'alyak.query';
+  var STORE_TTL = 30 * 60 * 1000;
+
+  var state = { front: '', back: '', shape: '', color: '', form: '', line: '', slot: '' };
+
+  function $(sel) { return document.querySelector(sel); }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function query() {
+    var q = {};
+    FIELDS.forEach(function (k) { q[k] = state[k].trim(); });
+    return q;
+  }
+  function hasAny() {
+    var q = query();
+    return FIELDS.some(function (k) { return !!q[k]; });
+  }
+  function isCapsule() { return state.form === '경질캡슐' || state.form === '연질캡슐'; }
+
+  // 약학정보원에 다녀와도 조건이 남도록 잠시 저장 (30분)
+  function save() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ t: Date.now(), q: query() })); } catch (e) { /* 저장 불가 환경 */ }
+  }
+  function restore() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+      if (!saved || Date.now() - saved.t > STORE_TTL) return;
+      FIELDS.forEach(function (k) { if (typeof saved.q[k] === 'string') state[k] = saved.q[k]; });
+    } catch (e) { /* 저장 불가 환경 */ }
+  }
+
+  // ---------- 아이콘 ----------
+  var STROKE = 'fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"';
+  function poly(n, cx, cy, r, rot) {
+    var pts = [];
+    for (var i = 0; i < n; i++) {
+      var a = rot + (i * 2 * Math.PI) / n;
+      pts.push((cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1));
+    }
+    return pts.join(' ');
+  }
+  function shapeIcon(shape) {
+    switch (shape) {
+      case '원형': return '<circle cx="60" cy="40" r="30" ' + STROKE + '/>';
+      case '타원형': return '<ellipse cx="60" cy="40" rx="46" ry="26" ' + STROKE + '/>';
+      case '장방형': return '<rect x="12" y="17" width="96" height="46" rx="23" ' + STROKE + '/>';
+      case '반원형': return '<path d="M22 60 A38 38 0 0 1 98 60 Z" ' + STROKE + '/>';
+      case '삼각형': return '<polygon points="' + poly(3, 60, 46, 34, -Math.PI / 2) + '" ' + STROKE + '/>';
+      case '사각형': return '<rect x="28" y="8" width="64" height="64" rx="9" ' + STROKE + '/>';
+      case '마름모형': return '<polygon points="60,6 102,40 60,74 18,40" ' + STROKE + '/>';
+      case '오각형': return '<polygon points="' + poly(5, 60, 43, 34, -Math.PI / 2) + '" ' + STROKE + '/>';
+      case '육각형': return '<polygon points="' + poly(6, 60, 40, 34, 0) + '" ' + STROKE + '/>';
+      case '팔각형': return '<polygon points="' + poly(8, 60, 40, 34, Math.PI / 8) + '" ' + STROKE + '/>';
+      default: return '<circle cx="60" cy="40" r="30" stroke-dasharray="7 7" ' + STROKE + '/>';
+    }
+  }
+  function icon(inner) { return '<svg class="ico" viewBox="0 0 120 80" aria-hidden="true">' + inner + '</svg>'; }
+  function chip(cat, val, inner) {
+    return '<button type="button" class="chip" data-cat="' + cat + '" data-val="' + esc(val) + '" aria-pressed="false">' +
+      inner + '<span class="chip-label">' + esc(val) + '</span></button>';
+  }
+  function buildChips() {
+    $('#chips-shape').innerHTML = SHAPES.map(function (s) { return chip('shape', s, icon(shapeIcon(s))); }).join('');
+    $('#chips-color').innerHTML = Object.keys(COLORS).map(function (c) {
+      var sw = COLORS[c] ? '<span class="sw" aria-hidden="true" style="background:' + COLORS[c] + '"></span>'
+        : '<span class="sw clear" aria-hidden="true"></span>';
+      return chip('color', c, sw);
+    }).join('');
+    var ring = '<circle cx="60" cy="40" r="28" ' + STROKE + '/>';
+    var forms = {
+      '정제': ring,
+      '경질캡슐': '<rect x="10" y="24" width="100" height="32" rx="16" ' + STROKE + '/><line x1="60" y1="24" x2="60" y2="56" ' + STROKE + '/>',
+      '연질캡슐': '<ellipse cx="60" cy="40" rx="46" ry="24" ' + STROKE + '/>'
+    };
+    $('#chips-form').innerHTML = FORMS.map(function (f) { return chip('form', f, icon(forms[f])); }).join('');
+    var h = '<line x1="36" y1="40" x2="84" y2="40" ' + STROKE + '/>';
+    var v = '<line x1="60" y1="16" x2="60" y2="64" ' + STROKE + '/>';
+    var lines = { '없음': ring, '(-)형': ring + h, '(+)형': ring + h + v };
+    $('#chips-line').innerHTML = LINES.map(function (l) { return chip('line', l, icon(lines[l])); }).join('');
+  }
+  function buildKeypad() {
+    var rows = ['1234567890', 'QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+    var html = rows.map(function (r, i) {
+      var keys = r.split('').map(function (k) {
+        return '<button type="button" class="key" data-key="' + k + '">' + k + '</button>';
+      }).join('');
+      if (i === 3) keys += '<button type="button" class="key key-fn" data-key="BS" aria-label="한 글자 지우기">⌫</button>';
+      return '<div class="krow r' + i + '">' + keys + '</div>';
+    }).join('');
+    html += '<div class="krow r4">' +
+      '<button type="button" class="key" data-key="-">-</button>' +
+      '<button type="button" class="key key-fn" data-key="SP">띄어쓰기</button>' +
+      '<button type="button" class="key key-done" data-key="DONE">완료</button></div>';
+    $('#keypad').innerHTML = html;
+  }
+
+  // ---------- 화면 ----------
+  function summaryText(q) {
+    var parts = [];
+    if (q.front) parts.push('앞 ' + q.front);
+    if (q.back) parts.push('뒤 ' + q.back);
+    ['shape', 'color', 'form'].forEach(function (k) { if (q[k]) parts.push(q[k]); });
+    if (q.line) parts.push('분할선 ' + q.line);
+    return parts.join(' · ');
+  }
+  function render() {
+    if (isCapsule()) state.line = '';
+    document.querySelectorAll('.chip').forEach(function (b) {
+      b.setAttribute('aria-pressed', state[b.dataset.cat] === b.dataset.val ? 'true' : 'false');
+      if (b.dataset.cat === 'line') b.disabled = isCapsule();
+    });
+    ['front', 'back'].forEach(function (s) {
+      $('#val-' + s).textContent = state[s];
+      $('#ph-' + s).hidden = !!state[s] || state.slot === s;
+      document.querySelector('[data-slot="' + s + '"]').setAttribute('aria-pressed', state.slot === s ? 'true' : 'false');
+    });
+    var q = query();
+    var sum = $('#summary');
+    sum.textContent = hasAny() ? summaryText(q) : '아는 조건만 골라 주세요';
+    sum.classList.toggle('empty', !hasAny());
+    $('#searchBtn').disabled = !hasAny();
+    $('#clearBtn').disabled = !hasAny();
+    save();
+    syncBarHeight();
+  }
+  function syncBarHeight() {
+    document.documentElement.style.setProperty('--bar-h', $('#bar').offsetHeight + 'px');
+  }
+
+  var toastTimer = 0;
+  function toast(msg) {
+    var t = $('#toast');
+    t.textContent = msg;
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.hidden = true; }, 2600);
+  }
+
+  // ---------- 각인 키패드 ----------
+  function openKeypad(slot) {
+    state.slot = slot;
+    $('#keypad').hidden = false;
+    render();
+  }
+  function closeKeypad() {
+    state.slot = '';
+    $('#keypad').hidden = true;
+    render();
+  }
+  function pressKey(k) {
+    var s = state.slot;
+    if (!s) return;
+    if (k === 'DONE') { closeKeypad(); return; }
+    if (k === 'BS') state[s] = state[s].slice(0, -1);
+    else if (k === 'SP') { if (state[s] && state[s].slice(-1) !== ' ') state[s] += ' '; }
+    else if (state[s].length < 16) state[s] += k;
+    render();
+  }
+
+  // ---------- 약학정보원으로 넘기기 ----------
+  function kpicParams(q, h) {
+    var out = [];
+    Object.keys(h.names || {}).forEach(function (k) {
+      if (!q[k]) return;
+      var val = q[k];
+      var map = h.values && h.values[k];
+      if (map && Object.prototype.hasOwnProperty.call(map, val)) val = map[val];
+      out.push([h.names[k], val]);
+    });
+    (h.extra || []).forEach(function (pair) { out.push(pair); });
+    return out;
+  }
+  function submitToKpic(q, h) {
+    var form = document.createElement('form');
+    form.method = h.method === 'POST' ? 'post' : 'get';
+    form.action = h.action;
+    form.acceptCharset = h.charset || 'UTF-8';
+    form.hidden = true;
+    kpicParams(q, h).forEach(function (pair) {
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = pair[0];
+      input.value = pair[1];
+      form.appendChild(input);
+    });
+    document.body.appendChild(form);
+    form.submit();
+  }
+  function search() {
+    if (!hasAny()) return;
+    closeKeypad();
+    var q = query();
+    if (window.ALYAK_PREVIEW) {
+      toast('미리보기에서는 약학정보원으로 넘어가지 않아요.');
+      return;
+    }
+    if (KPIC.handoff) {
+      submitToKpic(q, KPIC.handoff);
+      return;
+    }
+    // 연결 전: 각인 글자를 복사해 두고 약학정보원 검색 화면을 연다
+    var text = [q.front, q.back].filter(Boolean).join(' ');
+    var go = function () { location.href = KPIC.page; };
+    if (text && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(go, go);
+    } else {
+      go();
+    }
+  }
+
+  // ---------- 이벤트 ----------
+  document.addEventListener('click', function (e) {
+    var el;
+    if ((el = e.target.closest('.chip'))) {
+      var cat = el.dataset.cat;
+      state[cat] = state[cat] === el.dataset.val ? '' : el.dataset.val;
+      render();
+      return;
+    }
+    if ((el = e.target.closest('[data-key]'))) { pressKey(el.dataset.key); return; }
+    if ((el = e.target.closest('[data-slot]'))) {
+      if (state.slot === el.dataset.slot) closeKeypad(); else openKeypad(el.dataset.slot);
+    }
+  });
+  $('#swapBtn').addEventListener('click', function () {
+    var f = state.front;
+    state.front = state.back;
+    state.back = f;
+    render();
+  });
+  $('#clearBtn').addEventListener('click', function () {
+    FIELDS.forEach(function (k) { state[k] = ''; });
+    closeKeypad();
+  });
+  $('#searchBtn').addEventListener('click', search);
+  document.addEventListener('keydown', function (e) {
+    if (!state.slot || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (/^[a-zA-Z0-9-]$/.test(e.key)) { e.preventDefault(); pressKey(e.key.toUpperCase()); }
+    else if (e.key === ' ') { e.preventDefault(); pressKey('SP'); }
+    else if (e.key === 'Backspace') { e.preventDefault(); pressKey('BS'); }
+    else if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); closeKeypad(); }
+  });
+  window.addEventListener('resize', syncBarHeight);
+  window.addEventListener('pageshow', function () { restore(); render(); });
+
+  $('#notice').hidden = !!KPIC.handoff;
+  buildChips();
+  buildKeypad();
+  restore();
+  render();
+})();
+</script>
+</body>
+</html>
